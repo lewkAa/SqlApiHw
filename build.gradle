@@ -19,7 +19,6 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
     testImplementation 'mysql:mysql-connector-java:8.0.22'
     testImplementation 'com.github.javafaker:javafaker:1.0.2'
-    testImplementation 'com.codeborne:selenide:6.19.1'
     testImplementation 'commons-dbutils:commons-dbutils:1.7'
     testCompileOnly 'org.projectlombok:lombok:1.18.36'
     testAnnotationProcessor 'org.projectlombok:lombok:1.18.36'
@@ -27,6 +26,7 @@ dependencies {
     testImplementation 'io.rest-assured:rest-assured:5.3.2'
     testImplementation 'io.rest-assured:json-path:5.3.2'
     testImplementation 'io.rest-assured:xml-path:5.3.2'
+    testImplementation 'com.google.code.gson:gson:2.10.1'
 }
 
 test {

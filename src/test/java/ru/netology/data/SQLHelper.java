@@ -6,6 +6,7 @@ import org.apache.commons.dbutils.handlers.BeanHandler;
 import org.apache.commons.dbutils.handlers.BeanListHandler;
 import org.apache.commons.dbutils.handlers.ScalarHandler;
 import ru.netology.mode.User;
+import ru.netology.mode.Card;
 
 
 import java.sql.Connection;
@@ -40,6 +41,8 @@ public class SQLHelper {
         }
     }
 
+
+
     @SneakyThrows
     public static User getUserByLogin(String login) {
         var usersSQL = "SELECT * FROM users WHERE login= ?;";
@@ -47,6 +50,24 @@ public class SQLHelper {
             return runner.query(conn, usersSQL, new BeanHandler<>(User.class), login);
         }
     }
+
+    @SneakyThrows
+    public static List<Card>  getCardsByUID(String id) {
+        var cardsSQL = "SELECT * FROM cards WHERE user_id = ?";
+        try (var conn = getConnection()) {
+            return runner.query(conn, cardsSQL, new BeanListHandler<>(Card.class), id);
+        }
+    }
+
+    @SneakyThrows
+    public static int requestCardBalanceInRub(Card card) {
+        var countSQL = "SELECT balance_in_kopecks FROM cards WHERE  id = ?;";
+        try (var conn = getConnection()) {
+             int balance = runner.query(conn, countSQL, new ScalarHandler<>(), card.getId());
+             return balance /100;
+        }
+    }
+
 
     @SneakyThrows
     public static List<User> getUsers() {

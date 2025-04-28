@@ -2,11 +2,9 @@ package ru.netology.test;
 
 
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import ru.netology.data.ApiHelper;
+import ru.netology.data.DataHelper;
 import ru.netology.data.SQLHelper;
 import ru.netology.mode.User;
 
@@ -20,9 +18,9 @@ public class ApiTest {
 
     @BeforeAll
     public static void setup() {
-        user = SQLHelper.getUserByLogin("vasya");
-        user.setPassword("qwerty123");
-        authToken = ApiHelper.getAuthToken(user);
+        user = DataHelper.getTestUser();
+        ApiHelper.Login(user);
+        authToken = ApiHelper.getToken(user);
         log.info("Успешная настройка теста. Токен: {}", authToken);
     }
 
@@ -41,9 +39,19 @@ public class ApiTest {
     @Test
     @DisplayName("Перевод с карты на карту")
     void shouldTransferBetweenCards() {
-        ApiHelper.transferMoney("5559 0000 0000 0002",
-                "5559 0000 0000 0001", 5000, authToken);
-        var cardList = ApiHelper.getCardsList(authToken);
-        log.info("Список карт пользователя " + user.getLogin() + ":" + "\n{}", prettyPrint(cardList));
+        user = DataHelper.getTestUser();
+        var cardlist = SQLHelper.getCardsByUID(user.getId());
+        var depoCard = cardlist.get(0);
+        var withdrCard = cardlist.get(1);
+        var tranferAmount = DataHelper.genAmount(withdrCard);
+        var depoInitialBalanceinRub = (depoCard.getBalance_in_kopecks() / 100);
+        var withdrCardInitialBalanceRub = (withdrCard.getBalance_in_kopecks() / 100);
+
+        ApiHelper.transferMoney(withdrCard, depoCard, String.valueOf(tranferAmount), authToken);
+
+        Assertions.assertEquals(depoInitialBalanceinRub + tranferAmount,
+                SQLHelper.requestCardBalanceInRub(depoCard) );
+        Assertions.assertEquals(withdrCardInitialBalanceRub - tranferAmount,
+                SQLHelper.requestCardBalanceInRub(withdrCard) );
     }
 }

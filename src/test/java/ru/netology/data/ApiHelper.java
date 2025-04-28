@@ -4,13 +4,12 @@ import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.filter.log.LogDetail;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
-import io.restassured.response.ResponseBody;
 import io.restassured.specification.RequestSpecification;
-import ru.netology.mode.User;
-import lombok.extern.slf4j.Slf4j;
+import ru.netology.mode.*;
+
+import java.util.Map;
 
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.notNullValue;
 
 public class ApiHelper {
@@ -22,21 +21,32 @@ public class ApiHelper {
             .setContentType(ContentType.JSON)
             .log(LogDetail.ALL).build();
 
-    public static String getAuthToken(User user) {
+    public static void Login(User user) {
+        Map<String, String> loginData = Map.of(
+                "login", user.getLogin(),
+                "password", user.getPassword()
+        );
+
         given()
                 .spec(requestSpec)
-                .body("{ \"login\": \"" + user.getLogin() + "\", \"password\": \"" + user.getPassword() + "\" }")
+                .body(loginData)
                 .when()
                 .post("/api/auth")
                 .then()
                 .statusCode(200)
                 .extract()
                 .response();
+    }
+
+    public static String getToken(User user) {
+        Map<String, String> authData = Map.of(
+                "login", user.getLogin(),
+                "code", SQLHelper.getCodeByUid(user.getId())
+        );
 
         return given()
                 .spec(requestSpec)
-                .body("{ \"login\": \"" + user.getLogin() + "\", \"code\": \""
-                        + SQLHelper.getCodeByUid(user.getId()) + "\" }")
+                .body(authData)
                 .when()
                 .post("/api/auth/verification")
                 .then()
@@ -60,18 +70,19 @@ public class ApiHelper {
         return response.getBody().asString();
     }
 
-    public static void transferMoney(String fromCardNumber,
-                                                 String toCardNumber, int amount, String authToken) {
+    public static void transferMoney(Card withdrawCard, Card depositCard,
+                                     String amount, String authToken) {
 
-        String requestBody = String.format(
-                "{ \"from\": \"%s\", \"to\": \"%s\", \"amount\": %d }",
-                fromCardNumber, toCardNumber, amount
+        Map<String, String> transferData = Map.of(
+                "from", withdrawCard.getNumber(),
+                "to", depositCard.getNumber(),
+                "amount", amount
         );
 
         given()
                 .spec(requestSpec)
                 .header("Authorization", "Bearer " + authToken)
-                .body(requestBody)
+                .body(transferData)
                 .when()
                 .post("/api/transfer")
                 .then()
